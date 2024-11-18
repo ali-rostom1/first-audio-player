@@ -5,6 +5,7 @@ var displayedArtistName = document.querySelector('#artistName');
 var displayedTotalDuration = document.querySelector('.totalDuration');
 var displayedCurrentDuration = document.querySelector('.currentDuration');
 var progressBar = document.querySelector('#progress-bar');
+var progressContainer = document.querySelector('#progress-container');
 
 var Songs = [];
 
@@ -31,13 +32,31 @@ function Song(name,artist,coverPath,audioPath){
         updateCurrentTime(this);
         updateProgressBar(this);
     }.bind(this));
-
+    progressContainer.addEventListener('click',(event) =>{
+        let box = progressContainer.getBoundingClientRect();
+        let offsetX = event.clientX - box.left;
+        let percent = offsetX / box.width;
+        progressBar.style.width = `${percent * 100}%`;
+        this.music.currentTime = percent * this.music.duration;
+    })
     this.displayMusic = function(){
         backGround.style.background = `url('${coverPath}')`;
         displayedMusicCover.src = `${coverPath}`;
         displayedMusicName.textContent = `${name}`;
         displayedArtistName.textContent = `${artist}`;
     }
+    isDragging = false;
+    progressContainer.addEventListener('mousedown', () => isDragging = true);
+    window.addEventListener('mouseup', () => isDragging = false);
+    window.addEventListener('mousemove', (event) =>{
+        if(isDragging){
+            let box = progressContainer.getBoundingClientRect();
+            let offsetX = math.max(0,Math.min(event.clientX - box.left,box.width));
+            let percent = offsetX / box.width;
+            progressBar.style.width = `${percent*100}%`
+            this.music.currentTime = percent * this.music.duration; 
+        }
+    })
 }
 
 song1 = new Song('Let it happen','Tame impala','/assets/image/let_it_happen.jpg','/assets/audio/let_it_happen.mp3');
@@ -81,7 +100,8 @@ nextBtn.addEventListener('click', function(){
     Songs[index].music.currentTime = 0;
     index = (index +1) % Songs.length;
     Songs[index].displayMusic();
-    updateTotalDuration(Songs[index])
+    updateTotalDuration(Songs[index]);
+    Songs[index].music.currentTime = 0;
     Songs[index].music.play();
     playBtn.classList.remove('fa-play');
     playBtn.classList.add('fa-pause');
@@ -97,6 +117,7 @@ previousBtn.addEventListener('click', function(){
     index = (index - 1 + Songs.length) % Songs.length;
     Songs[index].displayMusic();
     updateTotalDuration(Songs[index]);
+    Songs[index].music.currentTime = 0;
     Songs[index].music.play();
     playBtn.classList.remove('fa-play');
     playBtn.classList.add('fa-pause');
@@ -123,3 +144,6 @@ function updateProgressBar(song){
     let percentage = (song.music.currentTime*100)/song.musicDuration;
     progressBar.style.width = `${percentage}%`;
 }
+
+
+
